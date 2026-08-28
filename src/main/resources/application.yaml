@@ -1,0 +1,27 @@
+quarkus:
+  http:
+    port: 8080
+  virtual-threads:
+    enabled: true
+  datasource:
+    db-kind: h2
+    username: sa
+    password: sa
+    jdbc:
+      url: jdbc:h2:mem:batchdb;DB_CLOSE_DELAY=-1
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+    jdbc:
+      statement-batch-size: 100
+    order-inserts: true
+  devservices:
+    enabled: false
+  log:
+    level: INFO
+    console:
+      format: "%d{HH:mm:ss} %-5p [%c] (%t) %s%e%n"
+
+batch:
+  chunk-size: 100
+  job-name: myJob
