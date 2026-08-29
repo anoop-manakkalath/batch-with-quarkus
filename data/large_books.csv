@@ -1,11 +1,152 @@
 ﻿id,title,author
-1,The Hobbit,J.R.R. Tolkien
-2,1984,George Orwell
-3,To Kill a Mockingbird,Harper Lee
-4,The Great Gatsby,F. Scott Fitzgerald
-5,Pride and Prejudice,Jane Austen
+1,The Great Gatsby,F. Scott Fitzgerald
+2,To Kill a Mockingbird,Harper Lee
+3,1984,George Orwell
+4,Pride and Prejudice,Jane Austen
+5,The Catcher in the Rye,J.D. Salinger
 6,One Hundred Years of Solitude,Gabriel García Márquez
-7,Moby-Dick,Herman Melville
-8,War and Peace,Leo Tolstoy
-9,Ulysses,James Joyce
-10,To the Lighthouse,Virginia Woolf
+7,Brave New World,Aldous Huxley
+8,The Hobbit,J.R.R. Tolkien
+9,Fahrenheit 451,Ray Bradbury
+10,War and Peace,Leo Tolstoy
+11,Crime and Punishment,Fyodor Dostoevsky
+12,The Brothers Karamazov,Fyodor Dostoevsky
+13,The Odyssey,Homer
+14,The Divine Comedy,Dante Alighieri
+15,Madame Bovary,Gustave Flaubert
+16,Wuthering Heights,Emily Brontë
+17,Jane Eyre,Charlotte Brontë
+18,Moby-Dick,Herman Melville
+19,Great Expectations,Charles Dickens
+20,A Tale of Two Cities,Charles Dickens
+21,The Count of Monte Cristo,Alexandre Dumas
+22,Les Misérables,Victor Hugo
+23,Don Quixote,Miguel de Cervantes
+24,Ulysses,James Joyce
+25,The Sound and the Fury,William Faulkner
+26,As I Lay Dying,William Faulkner
+27,In Search of Lost Time,Marcel Proust
+28,The Trial,Franz Kafka
+29,The Metamorphosis,Franz Kafka
+30,The Stranger,Albert Camus
+31,The Plague,Albert Camus
+32,The Master and Margarita,Mikhail Bulgakov
+33,Lolita,Vladimir Nabokov
+34,Pale Fire,Vladimir Nabokov
+35,Catch-22,Joseph Heller
+36,Slaughterhouse-Five,Kurt Vonnegut
+37,Cat's Cradle,Kurt Vonnegut
+38,Beloved,Toni Morrison
+39,Song of Solomon,Toni Morrison
+40,Invisible Man,Ralph Ellison
+41,Native Son,Richard Wright
+42,Their Eyes Were Watching God,Zora Neale Hurston
+43,The Color Purple,Alice Walker
+44,Things Fall Apart,Chinua Achebe
+45,Midnight's Children,Salman Rushdie
+46,The God of Small Things,Arundhati Roy
+47,White Teeth,Zadie Smith
+48,Never Let Me Go,Kazuo Ishiguro
+49,The Remains of the Day,Kazuo Ishiguro
+50,A Fine Balance,Rohinton Mistry
+51,The White Tiger,Aravind Adiga
+52,Life of Pi,Yann Martel
+53,The Road,Cormac McCarthy
+54,Blood Meridian,Cormac McCarthy
+55,No Country for Old Men,Cormac McCarthy
+56,The Grapes of Wrath,John Steinbeck
+57,Of Mice and Men,John Steinbeck
+58,East of Eden,John Steinbeck
+59,The Sun Also Rises,Ernest Hemingway
+60,Old Man and the Sea,Ernest Hemingway
+61,For Whom the Bell Tolls,Ernest Hemingway
+62,Heart of Darkness,Joseph Conrad
+63,Lord Jim,Joseph Conrad
+64,Nostromo,Joseph Conrad
+65,Frankenstein,Mary Shelley
+66,Dracula,Bram Stoker
+67,The Picture of Dorian Gray,Oscar Wilde
+68,The Strange Case of Dr Jekyll and Mr Hyde,Robert Louis Stevenson
+69,Treasure Island,Robert Louis Stevenson
+70,Alice's Adventures in Wonderland,Lewis Carroll
+71,Through the Looking-Glass,Lewis Carroll
+72,Gulliver's Travels,Jonathan Swift
+73,Robinson Crusoe,Daniel Defoe
+74,Moll Flanders,Daniel Defoe
+75,Vanity Fair,William Makepeace Thackeray
+76,Tess of the d'Urbervilles,Thomas Hardy
+77,Far from the Madding Crowd,Thomas Hardy
+78,Jude the Obscure,Thomas Hardy
+79,Sons and Lovers,D.H. Lawrence
+80,Women in Love,D.H. Lawrence
+81,Lady Chatterley's Lover,D.H. Lawrence
+82,To the Lighthouse,Virginia Woolf
+83,Mrs Dalloway,Virginia Woolf
+84,Orlando,Virginia Woolf
+85,A Portrait of the Artist as a Young Man,James Joyce
+86,Dubliners,James Joyce
+87,Finnegans Wake,James Joyce
+88,Heart of a Dog,Mikhail Bulgakov
+89,Doctor Zhivago,Boris Pasternak
+90,One Day in the Life of Ivan Denisovich,Aleksandr Solzhenitsyn
+91,The Gulag Archipelago,Aleksandr Solzhenitsyn
+92,Father and Sons,Ivan Turgenev
+93,Anna Karenina,Leo Tolstoy
+94,The Death of Ivan Ilyich,Leo Tolstoy
+95,Resurrection,Leo Tolstoy
+96,The Idiot,Fyodor Dostoevsky
+97,Notes from Underground,Fyodor Dostoevsky
+98,Demons,Fyodor Dostoevsky
+99,Dead Souls,Nikolai Gogol
+100,The Overcoat,Nikolai Gogol
+101,The Inspector General,Nikolai Gogol
+102,A Hero of Our Time,Mikhail Lermontov
+103,Eugene Onegin,Alexander Pushkin
+104,The Queen of Spades,Alexander Pushkin
+105,The Charterhouse of Parma,Stendhal
+106,The Red and the Black,Stendhal
+107,Pere Goriot,Honoré de Balzac
+108,Cousin Bette,Honoré de Balzac
+109,Sentimental Education,Gustave Flaubert
+110,Salammbô,Gustave Flaubert
+111,Germinal,Émile Zola
+112,Nana,Émile Zola
+113,L'Assommoir,Émile Zola
+114,Bel-Ami,Guy de Maupassant
+115,A Woman's Life,Guy de Maupassant
+116,The Hunchback of Notre-Dame,Victor Hugo
+117,The Toilers of the Sea,Victor Hugo
+118,The Three Musketeers,Alexandre Dumas
+119,Twenty Years After,Alexandre Dumas
+120,The Man in the Iron Mask,Alexandre Dumas
+121,The Black Tulip,Alexandre Dumas
+122,Cyrano de Bergerac,Edmond Rostand
+123,Candide,Voltaire
+124,Zadig,Voltaire
+125,Rameau's Nephew,Denis Diderot
+126,Jacques the Fatalist,Denis Diderot
+127,Dangerous Liaisons,Pierre Choderlos de Laclos
+128,The Sorrows of Young Werther,Johann Wolfgang von Goethe
+129,Wilhelm Meister's Apprenticeship,Johann Wolfgang von Goethe
+130,Faust,Johann Wolfgang von Goethe
+131,The Magic Mountain,Thomas Mann
+132,Death in Venice,Thomas Mann
+133,Buddenbrooks,Thomas Mann
+134,Doctor Faustus,Thomas Mann
+135,Steppenwolf,Hermann Hesse
+136,Siddhartha,Hermann Hesse
+137,The Glass Bead Game,Hermann Hesse
+138,Demian,Hermann Hesse
+139,The Tin Drum,Günter Grass
+140,Cat and Mouse,Günter Grass
+141,Dog Years,Günter Grass
+142,The Castle,Franz Kafka
+143,Amerika,Franz Kafka
+144,The Man Without Qualities,Robert Musil
+145,The Confusions of Young Törless,Robert Musil
+146,The Sleepwalkers,Hermann Broch
+147,The Death of Virgil,Hermann Broch
+148,Berlin Alexanderplatz,Alfred Döblin
+149,All Quiet on the Western Front,Erich Maria Remarque
+150,Three Comrades,Erich Maria Remarque
+151,The Arch of Triumph,Erich Maria Remarque

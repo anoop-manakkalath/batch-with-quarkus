@@ -2,10 +2,9 @@
 
 import java.util.List;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,10 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookEntity extends PanacheEntityBase {
-	
-	@Id
-    public Long id;
+public class BookEntity extends PanacheEntity {
 
     @Column(name = "title", nullable = false)
     public String title;
