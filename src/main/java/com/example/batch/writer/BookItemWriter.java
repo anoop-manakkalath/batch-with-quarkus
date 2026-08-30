@@ -10,8 +10,10 @@ import jakarta.batch.api.chunk.AbstractItemWriter;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
+import lombok.extern.jbosslog.JBossLog;
 
 @Named("bookItemWriter")
+@JBossLog
 @Dependent
 public class BookItemWriter extends AbstractItemWriter {
 
@@ -25,9 +27,10 @@ public class BookItemWriter extends AbstractItemWriter {
         subBatches.forEach(subBatch -> {
             subBatch.forEach(item -> em.persist((BookEntity) item));
             
-            // Flush batch to DB and clear Hibernate cache after every DB_SUB_BATCH_SIZE items
+            // Flush batch to DB and clear Hibernate cache after every 'DB_SUB_BATCH_SIZE' items
             em.flush();
             em.clear();
         });
+        log.infof("Inserted %d rows into the database", items.size());
     }
 }

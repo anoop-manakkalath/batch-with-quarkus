@@ -30,8 +30,8 @@ public class GenericBytePartitionMapper implements PartitionMapper {
 
         for (int i = 0; i < effectivePartitions; i++) {
             var props = new Properties();
-            long startOffset = i * bytesPerPartition;
-            long endOffset = (i == effectivePartitions - 1) ? totalBytes : (startOffset + bytesPerPartition);
+            var startOffset = i * bytesPerPartition;
+            var endOffset = (i == effectivePartitions - 1) ? totalBytes : (startOffset + bytesPerPartition);
 
             props.setProperty("startOffset", String.valueOf(startOffset));
             props.setProperty("endOffset", String.valueOf(endOffset));

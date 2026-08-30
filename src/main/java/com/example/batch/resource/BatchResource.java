@@ -26,20 +26,25 @@ import java.util.Properties;
 @JBossLog
 @Produces(MediaType.APPLICATION_JSON)
 public class BatchResource {
-
-    @Inject
-    @ConfigProperty(name = "batch.chunk-size")
-    String chunkSize;
-
-    @Inject
-    @ConfigProperty(name = "batch.job-name")
-    String jobName;
-
-    @Inject
-    JobOperator jobOperator;
-
-    @Inject
-    BookRepository bookRepository;
+	
+    private String chunkSize;
+    private String jobName;
+    private JobOperator jobOperator;
+    private BookRepository bookRepository;
+    
+	@Inject
+    public BatchResource(
+    	    @ConfigProperty(name = "batch.chunk-size")
+    	    String chunkSize,
+    	    @ConfigProperty(name = "batch.job-name")
+    	    String jobName,
+    	    JobOperator jobOperator,
+    	    BookRepository bookRepository) {
+		this.chunkSize = chunkSize;
+		this.jobName = jobName;
+		this.jobOperator = jobOperator;
+		this.bookRepository = bookRepository;
+    }
 
     @POST
     @Path("/start")
@@ -47,7 +52,8 @@ public class BatchResource {
         var jobParameters = new Properties();
         jobParameters.setProperty("chunkSize", chunkSize);
         try {
-            long executionId = jobOperator.start(jobName, jobParameters);
+            var executionId = jobOperator.start(jobName, jobParameters);
+            log.infof("Started the batch job %s", jobName);
             return Response.accepted(new JobStatusResponse(executionId, jobName, "STARTED")).build();
         } catch (JobStartException | JobSecurityException e) {
             log.errorf(e, "Failed to start batch job %s", jobName);
@@ -76,8 +82,7 @@ public class BatchResource {
     @Path("/list")
     public Response findBooks(
             @QueryParam("page") @DefaultValue("0") int pageIndex,
-            @QueryParam("size") @DefaultValue("100") int pageSize) {
-        
+            @QueryParam("size") @DefaultValue("50") int pageSize) {
         var books = bookRepository.findPagedBooks(pageIndex, pageSize);
         log.infof("Fetched page %d (%d books)", pageIndex, books.size());
         return Response.ok(books).build();

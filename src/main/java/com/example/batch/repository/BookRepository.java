@@ -2,6 +2,8 @@ package com.example.batch.repository;
 
 import com.example.batch.entity.BookEntity;
 import com.example.batch.mapper.BookMapper;
+import com.example.batch.model.Book;
+
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -11,11 +13,15 @@ import java.util.List;
 
 @ApplicationScoped
 public class BookRepository implements PanacheRepository<BookEntity> {
+	
+	private BookMapper mapper;
+    
+	@Inject
+    public BookRepository(BookMapper mapper) {
+    	this.mapper = mapper;
+    }
 
-    @Inject
-    BookMapper mapper;
-
-    public List<com.example.batch.model.Book> findPagedBooks(int pageIndex, int pageSize) {
+    public List<Book> findPagedBooks(int pageIndex, int pageSize) {
         return findAll()
                 .page(Page.of(pageIndex, pageSize))
                 .stream()

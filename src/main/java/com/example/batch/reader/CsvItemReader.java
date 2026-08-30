@@ -4,6 +4,7 @@ import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import com.example.batch.model.Book;
 
@@ -12,18 +13,22 @@ import jakarta.batch.api.chunk.AbstractItemReader;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import lombok.extern.jbosslog.JBossLog;
 
 @Named("csvItemReader")
+@JBossLog
 @Dependent
 public class CsvItemReader extends AbstractItemReader {
 
-    String startOffsetProp;
-    String endOffsetProp;
-    String partitionIndexProp;
+    private String startOffsetProp;
+    private String endOffsetProp;
+    private String partitionIndexProp;
 
     private RandomAccessFile file;
     private long endOffset;
     private int partitionIndex;
+    
+    private static final String CSV_FILE = "data/large_books.csv";
     
     @Inject
     public CsvItemReader(
@@ -40,9 +45,7 @@ public class CsvItemReader extends AbstractItemReader {
         var startOffset = Long.parseLong(startOffsetProp);
         this.endOffset = Long.parseLong(endOffsetProp);
         this.partitionIndex = Integer.parseInt(partitionIndexProp);
-
-        this.file = new RandomAccessFile(Paths.get("data/large_books.csv").toFile(), "r");
-
+        this.file = new RandomAccessFile(Paths.get(CSV_FILE).toFile(), "r");
         if (partitionIndex == 0) {
             // First thread: starts at byte 0 and skips CSV header line
             file.readLine();
@@ -60,26 +63,23 @@ public class CsvItemReader extends AbstractItemReader {
             return null;
         }
         var rawLine = file.readLine();
-        if (rawLine == null) {
+        if (Objects.isNull(rawLine)) {
             return null; // EOF reached
         }
-
         // Decode string from ISO-8859-1 byte read to UTF-8
         var line = new String(rawLine.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8).trim();
         if (line.isBlank()) {
             return readItem();
         }
-
         var firstComma = line.indexOf(',');
         var secondComma = line.indexOf(',', firstComma + 1);
         if (firstComma == -1 || secondComma == -1) {
             return readItem();
         }
-
         try {
             var id = Long.parseLong(line.substring(0, firstComma).trim());
-            var title = line.substring(firstComma + 1, secondComma).trim();var author = line.substring(secondComma + 1).trim();
-
+            var title = line.substring(firstComma + 1, secondComma).trim();
+            var author = line.substring(secondComma + 1).trim();
             return new Book(id, title, author);
         } catch (Exception e) {
             return readItem();
@@ -88,8 +88,9 @@ public class CsvItemReader extends AbstractItemReader {
 
     @Override
     public void close() throws Exception {
-        if (file != null) {
+        if (Objects.nonNull(file)) {
         	file.close();
+        	log.infof("Closed the CSV file %s", CSV_FILE);
         }
     }
 }
