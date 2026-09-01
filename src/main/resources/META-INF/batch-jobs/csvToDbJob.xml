@@ -13,8 +13,10 @@
             <writer ref="bookItemWriter"/>
         </chunk>
         <partition>
-            <plan partitions="8" />
 	        <mapper ref="genericBytePartitionMapper"/>
 	    </partition>
     </step>
+    <listeners>
+        <listener ref="jobTimerListener"/>
+    </listeners>
 </job>

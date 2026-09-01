@@ -4,26 +4,37 @@ import jakarta.batch.api.partition.PartitionMapper;
 import jakarta.batch.api.partition.PartitionPlan;
 import jakarta.batch.api.partition.PartitionPlanImpl;
 import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 @Named("genericBytePartitionMapper")
 @Dependent
 public class GenericBytePartitionMapper implements PartitionMapper {
-
-    private static final int PARTITION_COUNT = 8;
-    private static final String FILE_PATH = "data/large_books.csv";
+	
+	private String partitions;
+	private String filePath;
+	
+	@Inject
+	public GenericBytePartitionMapper(
+			@ConfigProperty(name = "partitions", defaultValue = "8") String partitions,
+			@ConfigProperty(name = "batch.file-path", defaultValue = "data/large_books.csv") String filePath) {
+		this.partitions = partitions;
+		this.filePath = filePath;
+	}
 
     @Override
     public PartitionPlan mapPartitions() throws Exception {
-        var path = Paths.get(FILE_PATH);
+        var path = Paths.get(filePath);
         var totalBytes = Files.size(path);
         
         // Adjust partitions if file is very small (< 8 KB)
-        var effectivePartitions = (totalBytes < 8192) ? 1 : PARTITION_COUNT;
+        var effectivePartitions = (totalBytes < 8192) ? 1 : Integer.parseInt(partitions);
         var bytesPerPartition = totalBytes / effectivePartitions;
 
         var partitionProperties = new Properties[effectivePartitions];

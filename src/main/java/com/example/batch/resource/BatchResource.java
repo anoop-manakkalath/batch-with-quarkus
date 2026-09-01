@@ -87,4 +87,12 @@ public class BatchResource {
         log.infof("Fetched page %d (%d books)", pageIndex, books.size());
         return Response.ok(books).build();
     }
+    
+    @GET
+    @Path("/count")
+    public Response countBooks() {
+        var count = bookRepository.count();
+        log.infof("The total no. of books: %d", count);
+        return Response.ok(count).build();
+    }
 }
