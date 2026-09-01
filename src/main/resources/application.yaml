@@ -3,6 +3,7 @@ quarkus:
     port: 8080
   virtual-threads:
     enabled: true
+
   datasource:
     db-kind: h2
     username: sa
@@ -10,19 +11,23 @@ quarkus:
     jdbc:
       url: jdbc:h2:mem:batchdb;DB_CLOSE_DELAY=-1
       max-size: 16
+
   hibernate-orm:
-    database:
-      generation: drop-and-create
+    schema-management:
+      strategy: drop-and-create
     jdbc:
       statement-batch-size: 4000
-    order-inserts: true
+
   devservices:
     enabled: false
+
   log:
-    level: INFO
     console:
       format: "%d{HH:mm:ss} %-5p [%c] (%t) %s%e%n"
+      level: INFO
 
 batch:
   chunk-size: 12000
+  partitions: 8
   job-name: csvToDbJob
+  file-path: "data/large_books.csv"

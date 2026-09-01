@@ -28,4 +28,8 @@ public class BookRepository implements PanacheRepository<BookEntity> {
                 .map(mapper::toDto)
                 .toList();
     }
+        
+    public long countBooks() {
+        return count();
+    }
 }

@@ -1,96 +1,105 @@
 package com.example.batch.reader;
 
-import java.io.RandomAccessFile;
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Objects;
-
 import com.example.batch.model.Book;
-
 import jakarta.batch.api.BatchProperty;
 import jakarta.batch.api.chunk.AbstractItemReader;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import lombok.extern.jbosslog.JBossLog;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 @Named("csvItemReader")
 @JBossLog
 @Dependent
 public class CsvItemReader extends AbstractItemReader {
 
-    private String startOffsetProp;
-    private String endOffsetProp;
-    private String partitionIndexProp;
+    private final String startOffsetProp;
+    private final String endOffsetProp;
+    private final String partitionIndexProp;
+    private final String filePath;
 
     private RandomAccessFile file;
     private long endOffset;
-    private int partitionIndex;
-    
-    private static final String CSV_FILE = "data/large_books.csv";
-    
+
     @Inject
     public CsvItemReader(
-    		@BatchProperty(name = "startOffset") String startOffsetProp,
+            @BatchProperty(name = "startOffset") String startOffsetProp,
             @BatchProperty(name = "endOffset") String endOffsetProp,
-            @BatchProperty(name = "partitionIndex") String partitionIndexProp) {
-    	this.startOffsetProp = startOffsetProp;
-    	this.endOffsetProp = endOffsetProp;
-    	this.partitionIndexProp = partitionIndexProp;
+            @BatchProperty(name = "partitionIndex") String partitionIndexProp,
+            @ConfigProperty(name = "batch.file-path", defaultValue = "data/large_books.csv") String filePath) {
+        this.startOffsetProp = startOffsetProp;
+        this.endOffsetProp = endOffsetProp;
+        this.partitionIndexProp = partitionIndexProp;
+        this.filePath = filePath;
     }
 
     @Override
     public void open(Serializable checkpoint) throws Exception {
         var startOffset = Long.parseLong(startOffsetProp);
         this.endOffset = Long.parseLong(endOffsetProp);
-        this.partitionIndex = Integer.parseInt(partitionIndexProp);
-        this.file = new RandomAccessFile(Paths.get(CSV_FILE).toFile(), "r");
+        var partitionIndex = Integer.parseInt(partitionIndexProp);
+        this.file = new RandomAccessFile(Paths.get(filePath).toFile(), "r");
         if (partitionIndex == 0) {
-            // First thread: starts at byte 0 and skips CSV header line
+            // Partition 0 starts at byte 0: skip CSV header line
             file.readLine();
         } else {
-            // Worker threads: jump to assigned start byte and skip partial line fragment
+            // Other partitions: seek to assigned byte offset and discard partial line boundary
             file.seek(startOffset);
-            file.readLine(); 
+            file.readLine();
         }
     }
 
     @Override
     public Object readItem() throws Exception {
-        // Stop reading once current pointer position passes endOffset
-        if (file.getFilePointer() >= endOffset) {
-            return null;
-        }
-        var rawLine = file.readLine();
-        if (Objects.isNull(rawLine)) {
-            return null; // EOF reached
-        }
-        // Decode string from ISO-8859-1 byte read to UTF-8
-        var line = new String(rawLine.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8).trim();
-        if (line.isBlank()) {
-            return readItem();
-        }
-        var firstComma = line.indexOf(',');
-        var secondComma = line.indexOf(',', firstComma + 1);
-        if (firstComma == -1 || secondComma == -1) {
-            return readItem();
-        }
-        try {
-            var id = Long.parseLong(line.substring(0, firstComma).trim());
-            var title = line.substring(firstComma + 1, secondComma).trim();
-            var author = line.substring(secondComma + 1).trim();
-            return new Book(id, title, author);
-        } catch (Exception e) {
-            return readItem();
-        }
+        return parseNextItem();
+    }
+    
+    private Object parseNextItem() throws IOException {
+    	 while (file.getFilePointer() < endOffset) {
+             var rawLine = file.readLine();
+             if (Objects.isNull(rawLine)) {
+                 return null; // End of file
+             }
+
+             // Decode byte encoding fix (ISO-8859-1 -> UTF-8)
+             var line = new String(rawLine.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8).trim();
+             if (line.isBlank()) {
+                 continue; // Skip blank lines without recursion
+             }
+
+             var firstComma = line.indexOf(',');
+             var secondComma = line.indexOf(',', firstComma + 1);
+             if (firstComma == -1 || secondComma == -1) {
+                 continue; // Skip bad lines safely
+             }
+
+             try {
+                 var id = Long.parseLong(line.substring(0, firstComma).trim());
+                 var title = line.substring(firstComma + 1, secondComma).trim();
+                 var author = line.substring(secondComma + 1).trim();
+                 
+                 return new Book(id, title, author);
+             } catch (Exception e) {
+                 continue;
+             }
+         }
+
+         return null;
     }
 
     @Override
     public void close() throws Exception {
         if (Objects.nonNull(file)) {
-        	file.close();
-        	log.infof("Closed the CSV file %s", CSV_FILE);
+            file.close();
+            log.infof("Closed the CSV file: %s", filePath);
         }
     }
 }
