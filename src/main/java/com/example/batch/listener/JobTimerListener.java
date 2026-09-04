@@ -8,8 +8,8 @@ import jakarta.inject.Named;
 import lombok.extern.jbosslog.JBossLog;
 
 @Named("jobTimerListener")
-@JBossLog
 @Dependent
+@JBossLog
 public class JobTimerListener extends AbstractJobListener {
 
 	private JobContext jobContext;

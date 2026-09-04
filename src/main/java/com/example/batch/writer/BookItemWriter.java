@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.example.batch.entity.BookEntity;
 
@@ -14,11 +15,15 @@ import jakarta.inject.Named;
 import lombok.extern.jbosslog.JBossLog;
 
 @Named("bookItemWriter")
-@JBossLog
 @Dependent
+@JBossLog
 public class BookItemWriter extends AbstractItemWriter {
 
-    private static final int DB_SUB_BATCH_SIZE = 4000;
+	private int batchSize;
+    
+    public BookItemWriter(@ConfigProperty(name = "quarkus.hibernate-orm.jdbc.statement-batch-size") int batchSize) {
+    	this.batchSize = batchSize;
+    }
 
     @Override
     public void writeItems(List<Object> items) throws Exception {
@@ -33,7 +38,7 @@ public class BookItemWriter extends AbstractItemWriter {
             .start(() -> {
                 QuarkusTransaction.requiringNew().run(() -> {
                     var em = BookEntity.getEntityManager();
-                    var subBatches = ListUtils.partition(items, DB_SUB_BATCH_SIZE);
+                    var subBatches = ListUtils.partition(items, batchSize);
                     
                     subBatches.forEach(subBatch -> {
                         subBatch.forEach(item -> em.persist((BookEntity) item));

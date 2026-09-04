@@ -17,8 +17,8 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 @Named("csvItemReader")
-@JBossLog
 @Dependent
+@JBossLog
 public class CsvItemReader extends AbstractItemReader {
 
     private final String startOffsetProp;

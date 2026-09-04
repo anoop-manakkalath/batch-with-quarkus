@@ -24,7 +24,6 @@ import java.util.Properties;
 
 @Path("/batch")
 @JBossLog
-@Produces(MediaType.APPLICATION_JSON)
 public class BatchResource {
 	
     private String chunkSize;
@@ -48,6 +47,7 @@ public class BatchResource {
 
     @POST
     @Path("/start")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response startBatch() {
         var jobParameters = new Properties();
         jobParameters.setProperty("chunkSize", chunkSize);
@@ -63,6 +63,7 @@ public class BatchResource {
 
     @GET
     @Path("/status/{executionId}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getStatus(@PathParam("executionId") long executionId) {
         try {
             var jobExecution = jobOperator.getJobExecution(executionId);
@@ -80,6 +81,7 @@ public class BatchResource {
 
     @GET
     @Path("/list")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response findBooks(
             @QueryParam("page") @DefaultValue("0") int pageIndex,
             @QueryParam("size") @DefaultValue("50") int pageSize) {
@@ -90,6 +92,7 @@ public class BatchResource {
     
     @GET
     @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response countBooks() {
         var count = bookRepository.count();
         log.infof("The total no. of books: %d", count);

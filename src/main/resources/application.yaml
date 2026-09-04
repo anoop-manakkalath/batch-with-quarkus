@@ -31,3 +31,4 @@ batch:
   partitions: 8
   job-name: csvToDbJob
   file-path: "data/large_books.csv"
+
