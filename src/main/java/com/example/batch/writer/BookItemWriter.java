@@ -2,18 +2,20 @@ package com.example.batch.writer;
 
 import com.example.batch.entity.BookEntity;
 import com.example.batch.partition.PartitionStepBarrier;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.batch.api.BatchProperty;
 import jakarta.batch.api.chunk.AbstractItemWriter;
 import jakarta.batch.runtime.context.StepContext;
 import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 @Named("bookItemWriter")
 @Dependent
@@ -25,7 +27,6 @@ public class BookItemWriter extends AbstractItemWriter {
     private final int batchSize;
     private final String partitionIndexProp;
 
-    @Inject
     public BookItemWriter(
             StepContext stepContext,
             PartitionStepBarrier barrier,
@@ -42,37 +43,38 @@ public class BookItemWriter extends AbstractItemWriter {
         if (CollectionUtils.isEmpty(items)) {
             return;
         }
-        int partitionId = getPartitionId();
-        executeBatchWrite(items, partitionId);
+        executeBatchWrite(items);
     }
 
-    private void executeBatchWrite(List<Object> items, int partitionId) {
-        var em = BookEntity.getEntityManager();
-        var subBatches = ListUtils.partition(items, batchSize);
-        for (var subBatch : subBatches) {
-            for (Object item : subBatch) {
-                em.persist(item);
-            }
-            em.flush();
-            em.clear();
-        }
-        log.infof("Partition %d: Inserted chunk of %d rows into database", partitionId, items.size());
+    private void executeBatchWrite(List<Object> items) {
+        QuarkusTransaction.requiringNew().run(() -> {
+            var partitionId = getPartitionId();
+            var em = BookEntity.getEntityManager();
+            var subBatches = ListUtils.partition(items, batchSize);
+            subBatches.forEach(subBatch -> {
+                subBatch.forEach(item -> em.persist(item));
+                em.flush();
+                em.clear();
+                log.infof("Partition %d: Inserted chunk of %d rows into DB", partitionId, subBatch.size());
+            });
+        });
     }
 
     @Override
     public void close() {
-        // Once this partition closes its writer, unlock Partition N + 1
-        int partitionId = getPartitionId();
+        var partitionId = getPartitionId();
+        // UNLOCK NEXT PARTITION: Signals Partition N + 1 to proceed
         barrier.completeTurn(partitionId);
+        log.infof("Partition %d writer completed all chunks.", partitionId);
     }
 
     private int getPartitionId() {
-        if (partitionIndexProp != null && !partitionIndexProp.isBlank()) {
+        if (StringUtils.isNotBlank(partitionIndexProp)) {
             return Integer.parseInt(partitionIndexProp.trim());
         }
-        if (stepContext != null && stepContext.getProperties() != null) {
-            String prop = stepContext.getProperties().getProperty("partitionIndex");
-            if (prop != null) {
+        if (Objects.nonNull(stepContext) && Objects.nonNull(stepContext.getProperties())) {
+            var prop = stepContext.getProperties().getProperty("partitionIndex");
+            if (Objects.nonNull(prop)) {
                 return Integer.parseInt(prop);
             }
         }
