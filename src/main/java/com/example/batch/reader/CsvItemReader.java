@@ -1,6 +1,7 @@
 package com.example.batch.reader;
 
 import com.example.batch.model.Book;
+import com.example.batch.partition.PartitionStepBarrier;
 import jakarta.batch.api.BatchProperty;
 import jakarta.batch.api.chunk.AbstractItemReader;
 import jakarta.enterprise.context.Dependent;
@@ -25,6 +26,7 @@ public class CsvItemReader extends AbstractItemReader {
     private final String endOffsetProp;
     private final String partitionIndexProp;
     private final String filePath;
+    private final PartitionStepBarrier barrier;
 
     private RandomAccessFile file;
     private long endOffset;
@@ -34,19 +36,23 @@ public class CsvItemReader extends AbstractItemReader {
             @BatchProperty(name = "startOffset") String startOffsetProp,
             @BatchProperty(name = "endOffset") String endOffsetProp,
             @BatchProperty(name = "partitionIndex") String partitionIndexProp,
-            @ConfigProperty(name = "batch.file-path", defaultValue = "data/large_books.csv") String filePath) {
+            @ConfigProperty(name = "batch.file-path", defaultValue = "data/large_books.csv") String filePath,
+            PartitionStepBarrier barrier) {
         this.startOffsetProp = startOffsetProp;
         this.endOffsetProp = endOffsetProp;
         this.partitionIndexProp = partitionIndexProp;
         this.filePath = filePath;
+        this.barrier = barrier;
     }
 
     @Override
     @SneakyThrows
     public void open(Serializable checkpoint) {
+        var partitionIndex = Integer.parseInt(partitionIndexProp);
+        // BLOCKS HERE: Thread waits idle until the previous partition completely finishes writing
+        barrier.awaitTurn(partitionIndex);
         var startOffset = Long.parseLong(startOffsetProp);
         this.endOffset = Long.parseLong(endOffsetProp);
-        var partitionIndex = Integer.parseInt(partitionIndexProp);
         this.file = new RandomAccessFile(Paths.get(filePath).toFile(), "r");
         if (partitionIndex == 0) {
             // Partition 0 starts at byte 0: skip CSV header line
@@ -65,32 +71,27 @@ public class CsvItemReader extends AbstractItemReader {
 
     @SneakyThrows
     private Object parseNextItem() {
-    	 while (file.getFilePointer() < endOffset) {
-             var rawLine = file.readLine();
-             if (Objects.isNull(rawLine)) {
-                 return null; // End of file
-             }
-
-             // Decode byte encoding fix (ISO-8859-1 -> UTF-8)
-             var line = new String(rawLine.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8).trim();
-             if (line.isBlank()) {
-                 continue; // Skip blank lines without recursion
-             }
-
-             var firstComma = line.indexOf(',');
-             var secondComma = line.indexOf(',', firstComma + 1);
-             if (firstComma == -1 || secondComma == -1) {
-                 continue; // Skip bad lines safely
-             }
-
-             var id = Long.parseLong(line.substring(0, firstComma).trim());
-             var title = line.substring(firstComma + 1, secondComma).trim();
-             var author = line.substring(secondComma + 1).trim();
-
-             return new Book(id, title, author);
-         }
-
-         return null;
+        while (file.getFilePointer() < endOffset) {
+            var rawLine = file.readLine();
+            if (Objects.isNull(rawLine)) {
+                return null; // End of file
+            }
+            // Decode byte encoding fix (ISO-8859-1 -> UTF-8)
+            var line = new String(rawLine.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8).trim();
+            if (line.isBlank()) {
+                continue; // Skip blank lines without recursion
+            }
+            var firstComma = line.indexOf(',');
+            var secondComma = line.indexOf(',', firstComma + 1);
+            if (firstComma == -1 || secondComma == -1) {
+                continue; // Skip bad lines safely
+            }
+            var id = Long.parseLong(line.substring(0, firstComma).trim());
+            var title = line.substring(firstComma + 1, secondComma).trim();
+            var author = line.substring(secondComma + 1).trim();
+            return new Book(id, title, author);
+        }
+        return null;
     }
 
     @Override

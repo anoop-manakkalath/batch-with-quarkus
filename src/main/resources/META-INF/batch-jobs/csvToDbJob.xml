@@ -3,18 +3,22 @@
     <step id="csvToDbStep">
         <chunk item-count="#{jobParameters['chunkSize']}">
             <reader ref="csvItemReader">
-	            <properties>
-	                <property name="startOffset" value="#{partitionPlan['startOffset']}"/>
-	                <property name="endOffset" value="#{partitionPlan['endOffset']}"/>
-	                <property name="partitionIndex" value="#{partitionPlan['partitionIndex']}"/>
-	            </properties>
+                <properties>
+                    <property name="startOffset" value="#{partitionPlan['startOffset']}"/>
+                    <property name="endOffset" value="#{partitionPlan['endOffset']}"/>
+                    <property name="partitionIndex" value="#{partitionPlan['partitionIndex']}"/>
+                </properties>
             </reader>
             <processor ref="bookItemProcessor"/>
-            <writer ref="bookItemWriter"/>
+            <writer ref="bookItemWriter">
+                <properties>
+                    <property name="partitionIndex" value="#{partitionPlan['partitionIndex']}"/>
+                </properties>
+            </writer>
         </chunk>
         <partition>
-	        <mapper ref="genericBytePartitionMapper"/>
-	    </partition>
+            <mapper ref="genericBytePartitionMapper"/>
+        </partition>
     </step>
     <listeners>
         <listener ref="jobTimerListener"/>

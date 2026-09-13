@@ -22,8 +22,4 @@ public class BookEntity extends PanacheEntity {
 
     @Column(name = "author")
     public String author;
-    
-    public static List<BookEntity> findAllBooks() {
-        return findAll().list();
-    }
 }
