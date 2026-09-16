@@ -1,7 +1,6 @@
 package com.example.batch.partition;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,7 +16,6 @@ public class PartitionStepBarrier {
     private final Condition turnCondition;
     private final AtomicInteger currentTurn;
 
-    @Inject
     public PartitionStepBarrier() {
         this.lock = new ReentrantLock();
         this.turnCondition = this.lock.newCondition();
@@ -34,7 +32,7 @@ public class PartitionStepBarrier {
             while (currentTurn.get() != partitionId) {
                 turnCondition.awaitUninterruptibly();
             }
-            log.infof(">>> Partition %d UNLOCKED: Starting execution", partitionId);
+            log.infof("Partition %d UNLOCKED: Starting execution", partitionId);
         } finally {
             lock.unlock();
         }
@@ -47,8 +45,8 @@ public class PartitionStepBarrier {
     public void completeTurn(int partitionId) {
         lock.lock();
         try {
-            int nextTurn = currentTurn.incrementAndGet();
-            log.infof("<<< Partition %d FINISHED COMPLETELY. Unlocking Partition %d", partitionId, nextTurn);
+            var nextTurn = currentTurn.incrementAndGet();
+            log.infof("Partition %d FINISHED COMPLETELY. Unlocking Partition %d", partitionId, nextTurn);
             turnCondition.signalAll();
         } finally {
             lock.unlock();
@@ -58,7 +56,7 @@ public class PartitionStepBarrier {
     public void deregister(int partitionId) {
         lock.lock();
         try {
-            int nextTurn = currentTurn.incrementAndGet();
+            var nextTurn = currentTurn.incrementAndGet();
             log.warnf("Partition %d failed! Skipping turn to %d to prevent deadlock.", partitionId, nextTurn);
             turnCondition.signalAll();
         } finally {

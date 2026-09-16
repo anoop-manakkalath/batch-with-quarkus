@@ -7,6 +7,7 @@ import jakarta.batch.api.BatchProperty;
 import jakarta.batch.api.chunk.AbstractItemWriter;
 import jakarta.batch.runtime.context.StepContext;
 import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,6 +28,7 @@ public class BookItemWriter extends AbstractItemWriter {
     private final int batchSize;
     private final String partitionIndexProp;
 
+    @Inject
     public BookItemWriter(
             StepContext stepContext,
             PartitionStepBarrier barrier,
@@ -47,10 +49,10 @@ public class BookItemWriter extends AbstractItemWriter {
     }
 
     private void executeBatchWrite(List<Object> items) {
+        var partitionId = getPartitionId();
+        var subBatches = ListUtils.partition(items, batchSize);
         QuarkusTransaction.requiringNew().run(() -> {
-            var partitionId = getPartitionId();
             var em = BookEntity.getEntityManager();
-            var subBatches = ListUtils.partition(items, batchSize);
             subBatches.forEach(subBatch -> {
                 subBatch.forEach(item -> em.persist(item));
                 em.flush();

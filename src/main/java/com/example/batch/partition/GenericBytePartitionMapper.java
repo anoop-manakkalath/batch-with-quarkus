@@ -4,12 +4,12 @@ import jakarta.batch.api.partition.PartitionMapper;
 import jakarta.batch.api.partition.PartitionPlan;
 import jakarta.batch.api.partition.PartitionPlanImpl;
 import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.stream.IntStream;
 
 import lombok.SneakyThrows;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,7 +21,6 @@ public class GenericBytePartitionMapper implements PartitionMapper {
 	private final String partitions;
 	private final String filePath;
 	
-	@Inject
 	public GenericBytePartitionMapper(
 			@ConfigProperty(name = "batch.partitions", defaultValue = "8") String partitions,
 			@ConfigProperty(name = "batch.file-path", defaultValue = "data/large_books.csv") String filePath) {
@@ -38,7 +37,7 @@ public class GenericBytePartitionMapper implements PartitionMapper {
         var effectivePartitions = (totalBytes < 8192) ? 1 : Integer.parseInt(partitions);
         var bytesPerPartition = totalBytes / effectivePartitions;
         var partitionProperties = new Properties[effectivePartitions];
-        for (int i = 0; i < effectivePartitions; i++) {
+        IntStream.range(0, effectivePartitions).forEachOrdered(i -> {
             var props = new Properties();
             var startOffset = i * bytesPerPartition;
             var endOffset = (i == effectivePartitions - 1) ? totalBytes : (startOffset + bytesPerPartition);
@@ -46,7 +45,7 @@ public class GenericBytePartitionMapper implements PartitionMapper {
             props.setProperty("endOffset", String.valueOf(endOffset));
             props.setProperty("partitionIndex", String.valueOf(i));
             partitionProperties[i] = props;
-        }
+        });
         var plan = new PartitionPlanImpl();
         plan.setPartitions(effectivePartitions);
         plan.setPartitionProperties(partitionProperties);
