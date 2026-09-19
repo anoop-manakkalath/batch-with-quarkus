@@ -3,12 +3,15 @@ package com.example.batch.writer;
 import com.example.batch.entity.BookEntity;
 import com.example.batch.partition.PartitionStepBarrier;
 import io.quarkus.narayana.jta.QuarkusTransaction;
+import io.quarkus.virtual.threads.VirtualThreads;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.batch.api.BatchProperty;
 import jakarta.batch.api.chunk.AbstractItemWriter;
 import jakarta.batch.runtime.context.StepContext;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import lombok.SneakyThrows;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
@@ -17,6 +20,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 @Named("bookItemWriter")
 @Dependent
@@ -27,39 +31,46 @@ public class BookItemWriter extends AbstractItemWriter {
     private final PartitionStepBarrier barrier;
     private final int batchSize;
     private final String partitionIndexProp;
+    private final ExecutorService virtualThreads;
 
     @Inject
     public BookItemWriter(
             StepContext stepContext,
             PartitionStepBarrier barrier,
             @ConfigProperty(name = "quarkus.hibernate-orm.jdbc.statement-batch-size", defaultValue = "4000") int batchSize,
-            @BatchProperty(name = "partitionIndex") String partitionIndexProp) {
+            @BatchProperty(name = "partitionIndex") String partitionIndexProp,
+            @VirtualThreads ExecutorService virtualThreads) {
         this.stepContext = stepContext;
         this.barrier = barrier;
         this.batchSize = batchSize;
         this.partitionIndexProp = partitionIndexProp;
+        this.virtualThreads = virtualThreads;
     }
 
     @Override
     public void writeItems(List<Object> items) {
         if (CollectionUtils.isEmpty(items)) {
+            log.info("Nothing to insert into the database");
             return;
         }
         executeBatchWrite(items);
     }
 
+    @SneakyThrows
     private void executeBatchWrite(List<Object> items) {
         var partitionId = getPartitionId();
         var subBatches = ListUtils.partition(items, batchSize);
-        QuarkusTransaction.requiringNew().run(() -> {
-            var em = BookEntity.getEntityManager();
-            subBatches.forEach(subBatch -> {
-                subBatch.forEach(item -> em.persist(item));
-                em.flush();
-                em.clear();
-                log.infof("Partition %d: Inserted chunk of %d rows into DB", partitionId, subBatch.size());
+        virtualThreads.submit(() -> {
+            QuarkusTransaction.requiringNew().run(() -> {
+                var em = BookEntity.getEntityManager();
+                subBatches.forEach(subBatch -> {
+                    subBatch.forEach(item -> em.persist(item));
+                    em.flush();
+                    em.clear();
+                    log.infof("Partition %d: Inserted chunk of %d rows into DB", partitionId, subBatch.size());
+                });
             });
-        });
+        }).get();
     }
 
     @Override

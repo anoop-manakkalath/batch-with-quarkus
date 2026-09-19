@@ -4,6 +4,7 @@ import com.example.batch.model.JobExceptionStatusResponse;
 import com.example.batch.model.JobStatusResponse;
 import com.example.batch.repository.BookRepository;
 
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.batch.operations.JobOperator;
 import jakarta.batch.operations.JobSecurityException;
 import jakarta.batch.operations.JobStartException;
@@ -26,6 +27,7 @@ import java.util.Properties;
 
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 @JBossLog
 public class BatchResource {
 	
